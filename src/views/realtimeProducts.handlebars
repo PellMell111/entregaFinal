@@ -1,0 +1,92 @@
+<h1>Productos en Tiempo Real</h1>
+
+<ul id="productList">
+    {{#each products}}
+        <li data-id="{{this.id}}">
+            {{this.title}} - ${{this.price}}
+            <button onclick="deleteProduct({{this.id}})">Eliminar</button>
+            <button onclick="addToCart({{this.id}})">Agregar al carrito</button>
+        </li>
+    {{/each}}
+</ul>
+
+<h2>Agregar Producto</h2>
+<form id="addProductForm">
+    <input type="text" name="title" placeholder="Título" required>
+    <input type="text" name="description" placeholder="Descripción" required>
+    <input type="text" name="code" placeholder="Código único" required>
+    <input type="number" name="price" placeholder="Precio" step="0.01" required>
+    <input type="number" name="stock" placeholder="Stock" required>
+    <input type="text" name="category" placeholder="Categoría" required>
+    <input type="text" name="thumbnails" placeholder="Thumbnails (separados por coma)">
+    
+    <button type="submit">Agregar</button>
+</form>
+
+<script>
+    const socket = io();
+    const productList = document.getElementById('productList');
+    const form = document.getElementById('addProductForm');
+
+    form.addEventListener('submit', e => {
+        e.preventDefault();
+        
+        const requiredFields = ['title', 'description', 'code', 'price', 'stock', 'category'];
+        const missingFields = requiredFields.filter(field => !form[field].value.trim());
+        
+        if (missingFields.length > 0) {
+            return alert(`Faltan campos obligatorios: ${missingFields.join(', ')}`);
+        }
+
+        const thumbnails = form.thumbnails.value 
+            ? form.thumbnails.value.split(',').map(item => item.trim()).filter(item => item)
+            : [];
+
+        const newProduct = {
+            title: form.title.value.trim(),
+            description: form.description.value.trim(),
+            code: form.code.value.trim(),
+            price: parseFloat(form.price.value),
+            stock: parseInt(form.stock.value),
+            category: form.category.value.trim(),
+            thumbnails: thumbnails,
+            status: true
+        };
+
+        if (isNaN(newProduct.price) || isNaN(newProduct.stock) || newProduct.price <= 0 || newProduct.stock <= 0) {
+            return alert('Precio y Stock deben ser números válidos y positivos');
+        }
+
+        socket.emit('addProduct', newProduct);
+        form.reset();        
+    });
+
+    function deleteProduct(id) {
+        if (confirm('¿Eliminar este producto?')) {
+            socket.emit('deleteProduct', id);
+        }
+    }
+
+    socket.on('updateProducts', products => {
+        productList.innerHTML = products.map(p => `
+            <li data-id="${p.id}">
+                ${p.title} - $${p.price}
+                <button onclick="deleteProduct(${p.id})">Eliminar</button>
+            </li>
+        `).join('');
+    });
+
+    socket.on('error', error => {
+        alert(`Error: ${error}`);
+    });
+
+    function addToCart(productId) {
+        const cartId = 1;
+        socket.emit('addToCart', { cartId, productId });
+    }
+
+    socket.on('cartUpdated', (cart) => {
+        console.log('Carrito actualizado:', cart);
+        alert(`Producto agregado al carrito ${cart.id}`);
+    });
+</script>

@@ -1,0 +1,80 @@
+[
+  {
+    "id": 1,
+    "title": "Primer Ejemplo",
+    "description": "Este es un producto de prueba para el método POST",
+    "code": "P002",
+    "price": 29.99,
+    "status": true,
+    "stock": 20,
+    "category": "Electrónicos",
+    "thumbnails": [
+      "url1",
+      "url2"
+    ]
+  },
+  {
+    "id": 2,
+    "title": "Segundo Ejemplo",
+    "description": "Este es otro producto de prueba para el método POST",
+    "code": "P003",
+    "price": 49.99,
+    "status": true,
+    "stock": 15,
+    "category": "Ropa",
+    "thumbnails": [
+      "url3",
+      "url4"
+    ]
+  },
+  {
+    "id": 3,
+    "title": "Tercer Ejemplo",
+    "description": "Otro producto de muestra para probar el método POST",
+    "code": "P004",
+    "price": 39.99,
+    "status": true,
+    "stock": 25,
+    "category": "Hogar",
+    "thumbnails": [
+      "url5",
+      "url6"
+    ]
+  },
+  {
+    "title": "Cuarto Ejemplo",
+    "price": 9.99,
+    "description": "Descripción básica",
+    "code": "CODE-1743105437952",
+    "stock": 10,
+    "category": "general",
+    "id": 4,
+    "status": true,
+    "thumbnails": []
+  },
+  {
+    "title": "Quinto Ejemplo",
+    "price": 15.99,
+    "description": "Descripción básica",
+    "code": "CODE-1743105507350",
+    "stock": 10,
+    "category": "general",
+    "id": 5,
+    "status": true,
+    "thumbnails": []
+  },
+  {
+    "title": "Sexto Ejemplo",
+    "description": "Descripción del sexto ejemplo",
+    "code": "P006",
+    "price": 22.99,
+    "stock": 7,
+    "category": "Hogar",
+    "thumbnails": [
+      "url7",
+      "url8"
+    ],
+    "status": true,
+    "id": 6
+  }
+]
