@@ -1,80 +1,92 @@
-const productManager = require('../managers/productManager');
-const { io } = require('../app');
+const productManager = require('../managers/productManager.js');
+const { io } = require('../../app');
 
-const getProducts = (req, res) => {
+const getProducts = async (req, res) => {
     try {
-        const products = productManager.getProducts();
-        res.json({ status: 'success', data: products });
+        console.log("Fetching products from DB...");
+        const products = await productManager.getProducts();
+        
+        console.log("Products retrieved:", products);
+        
+        const processedProducts = products.map(p => ({
+            ...p._doc,
+            id: p._id.toString()
+        }));
+        
+        console.log("Processed products:", processedProducts);
+        
+        res.render('home', { 
+            products: processedProducts,
+            title: 'Home'
+        });
     } catch (error) {
-        res.status(500).json({ status: 'error', message: error.message });
+        console.error("Error in getProducts:", error);
+        res.status(500).render('error', { message: error.message });
     }
 };
 
-const getProductById = (req, res) => {
+const getProductById = async (req, res) => {
     try {
-        const product = productManager.getProductById(Number(req.params.pid));
-        res.json({ status: 'success', data: product });
+        const product = await productManager.getProductById(req.params.pid);
+        res.render('productDetail', {
+            product: {
+                ...product._doc,
+                id: product._id.toString()
+            },
+            title: product.title
+        });
     } catch (error) {
-        res.status(404).json({ status: 'error', message: error.message });
+        res.status(404).render('error', { message: error.message });
     }
 };
 
-const addProduct = (req, res) => {
+const addProduct = async (req, res) => {
     try {
         const { title, description, code, price, stock, category, thumbnails } = req.body;
-        
+
         if (!title || !description || !code || !price || !stock || !category) {
             throw new Error('Todos los campos son requeridos');
         }
 
-        const newProduct = {
+        const newProduct = await productManager.addProduct({
             title,
             description,
             code,
             price: Number(price),
             stock: Number(stock),
             category,
-            thumbnails: thumbnails || []
-        };
+            thumbnails: thumbnails?.split(',') || []
+        });
 
-        const createdProduct = productManager.addProduct(newProduct);
-        
-        io.emit('productAdded', createdProduct);
-        io.emit('updateProducts', productManager.getProducts());
-        
-        res.status(201).json({ status: 'success', data: createdProduct });
+        io.emit('updateProducts', await productManager.getProducts());
+        res.redirect('/realtimeproducts');
+
     } catch (error) {
-        res.status(400).json({ status: 'error', message: error.message });
+        res.status(400).render('error', { message: error.message });
     }
 };
 
-const updateProduct = (req, res) => {
+const updateProduct = async (req, res) => {
     try {
-        const updatedProduct = productManager.updateProduct(
-            Number(req.params.pid),
+        const updatedProduct = await productManager.updateProduct(
+            req.params.pid,
             req.body
         );
-        
-        io.emit('productUpdated', updatedProduct);
-        io.emit('updateProducts', productManager.getProducts());
-        
-        res.json({ status: 'success', data: updatedProduct });
+
+        io.emit('updateProducts', await productManager.getProducts());
+        res.redirect('/realtimeproducts');
     } catch (error) {
-        res.status(400).json({ status: 'error', message: error.message });
+        res.status(400).render('error', { message: error.message });
     }
 };
 
-const deleteProduct = (req, res) => {
+const deleteProduct = async (req, res) => {
     try {
-        const deletedId = Number(req.params.pid);
-        productManager.deleteProduct(deletedId);
-        
-        io.emit('productDeleted', deletedId);
-        io.emit('updateProducts', productManager.getProducts());
-        
-        res.json({ status: 'success', message: `Producto ${deletedId} eliminado` });
+        await productManager.deleteProduct(req.params.pid);
+        io.emit('updateProducts', await productManager.getProducts());
+        res.redirect('/realtimeproducts');
     } catch (error) {
-        res.status(404).json({ status: 'error', message: error.message });
+        res.status(404).render('error', { message: error.message });
     }
 };
 
